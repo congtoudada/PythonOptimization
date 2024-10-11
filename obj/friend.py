@@ -2,8 +2,10 @@
 import random
 
 from pkgs.serialize_decorator import ex_serialize
+from pkgs.warm_up_decorator import ex_warm_up
 
 
+@ex_warm_up
 @ex_serialize
 class Friend(object):
     __slots__ = ('owner', 'version', 'fid', 'show')
@@ -22,7 +24,7 @@ class Friend(object):
         self.fid = random.randint(1, 100)  # int
         self.show = [random.randint(10000, 1000000) for _ in range(10)]
 
-    def __setstate__(self, state):
+    def from_dict(self, state):
         self.version = state['version']
         self.fid = int(state['fid'])
         self.show = []

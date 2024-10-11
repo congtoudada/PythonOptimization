@@ -21,9 +21,9 @@ def _serialize_list(_l):
         for i in range(len(_l)):
             _l[i] = _complex_serialize_dispatcher[type(_l[i])](_l[i])
     # 处理自定义类型
-    elif hasattr(_l[0], '__getstate__'):
+    elif hasattr(_l[0], 'to_dict'):
         for i in range(len(_l)):
-            _l[i] = _l[i].__getstate__()
+            _l[i] = _l[i].to_dict()
     return _l
 
 
@@ -43,8 +43,8 @@ def _serialize_dict(_d):
         if _complex_serialize_dispatcher.__contains__(type(v)):
             _d[k] = _complex_serialize_dispatcher[type(v)](v)
         # 处理自定义类型
-        elif hasattr(v, '__getstate__'):
-            _d[k] = v.__getstate__()
+        elif hasattr(v, 'to_dict'):
+            _d[k] = v.to_dict()
         else:
             break
     return _d
@@ -68,9 +68,14 @@ _complex_serialize_dispatcher[set] = _serialize_set
 
 
 def ex_serialize(cls):
-    def __getstate__(self):
+    def to_dict(self):
         d = {}
+        none_serialize_slots = set()
+        if hasattr(self, 'none_serialize_slots'):
+            none_serialize_slots = self.none_serialize_slots
         for slot in cls.__slots__:
+            if none_serialize_slots.__contains__(slot):
+                continue
             o = getattr(self, slot)
             if o is None:
                 continue
@@ -80,12 +85,12 @@ def ex_serialize(cls):
             if _complex_serialize_dispatcher.__contains__(type(o)):
                 d[slot] = _complex_serialize_dispatcher[type(o)](o)
             # 自定义类型
-            elif hasattr(o, '__getstate__'):
-                d[slot] = o.__getstate__()
+            elif hasattr(o, 'to_dict'):
+                d[slot] = o.to_dict()
             # 其他类型
             else:
                 d[slot] = o
         return d
 
-    cls.__getstate__ = __getstate__
+    cls.to_dict = to_dict
     return cls

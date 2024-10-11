@@ -4,6 +4,7 @@ import time
 
 from obj.friend import Friend
 from pkgs.serialize_decorator import ex_serialize
+from pkgs.warm_up_decorator import ex_warm_up
 
 n = 3
 
@@ -12,13 +13,15 @@ def playFunc():
     print("Playing")
 
 
+@ex_warm_up
 @ex_serialize
 class Player(object):
-    __slots__ = ('name', 'version', 'is_active', 'level', 'health', 'position', 'callback', 'data', 'equipment', 'bag',
+    __slots__ = ('none_serialize_slots', 'name', 'version', 'is_active', 'level', 'health', 'position', 'callback', 'data', 'equipment', 'bag',
                  'skills', 'dataMap', 'bestFriend', 'friends', 'bro')
 
     def __init__(self, name="cong tou", level=1):
         # -------------------------- python内置类型 --------------------------
+        self.none_serialize_slots = {'friends'}
         self.name = name  # str
         self.version = "v0.1"  # str
         self.is_active = True  # bool
@@ -37,18 +40,17 @@ class Player(object):
         self.bestFriend = None  # 自定义类型
         self.friends = []  # list[自定义类型]
         self.bro = None  # 用于构建自依赖
-        self.init()
 
     def init(self):
         self.data = [random.randint(10000, 1000000) for _ in range(n)]
         self.equipment = set(self.data)
         for i in range(n):
             self.dataMap[i] = [random.randint(10, 100) for _ in range(random.randint(1, 100))]
-        self.bestFriend = Friend()
+        self.bestFriend = Friend()  # ExSerialize()(Friend)
         self.friends = [Friend() for _ in range(n)]
         time.sleep(1)  # 模拟耗时计算
 
-    def __setstate__(self, state):
+    def from_dict(self, state):
         # -------------------------- python内置类型 --------------------------
         self.name = state['name']
         self.version = state['version']
@@ -65,10 +67,13 @@ class Player(object):
         for k, v in state['dataMap'].items():
             self.dataMap[int(k)] = v
         # -------------------------- python自定义类型 --------------------------
-        fri = Friend()
-        fri.__setstate__(state["bestFriend"])
-        self.bestFriend = fri
-        # 我希望friends能共享，不反序列化
+        # 我希望bestFriend, friends能共享，不序列化
+        # 共享写法（这里绑定cdo，其实不太好，最合适还是去调用处，根据上下文自己手动绑吧
+        # self.bestFriend = UJsonCDOMgr.getinstance().get_cdo(Friend)
+        # 拷贝写法
+        # fri = Friend()
+        # fri.from_dict(state["bestFriend"])
+        # self.bestFriend = fri
         # self.friends = []
         # for i in range(len(state["friends"])):
         #     fri = Friend()

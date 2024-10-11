@@ -9,10 +9,17 @@ from copy import copy, deepcopy
 from pkgs.cdo_mgr import CDOMgr
 
 
-class UjsonCDOMgr(CDOMgr):
+class UJsonCDOMgr(CDOMgr):
+    __instance = None
+
+    @classmethod
+    def getinstance(cls):
+        if cls.__instance is None:
+            cls.__instance = UJsonCDOMgr()
+        return cls.__instance
 
     def __init__(self):
-        super(UjsonCDOMgr, self).__init__(suffix=".ujson")
+        super(UJsonCDOMgr, self).__init__(suffix=".ujson")
 
     def _clone(self, cdo):
         """
@@ -20,11 +27,11 @@ class UjsonCDOMgr(CDOMgr):
         :param cdo:
         :return:
         """
-        info_dict = cdo.__getstate__()
+        info_dict = cdo.to_dict()
         # data = ujson.dumps(info_dict)
         # info_dict = ujson.loads(data)
         obj = copy(cdo)
-        obj.__setstate__(info_dict)
+        obj.from_dict(info_dict)
         return obj
 
 
@@ -34,11 +41,11 @@ class UjsonCDOMgr(CDOMgr):
         :param cdo:
         :return:
         """
-        if not hasattr(cdo, '__getstate__'):
-            print("[ _save_cdo failed ] cdo is not serializable, please provide __getstate__")
+        if not hasattr(cdo, 'to_dict'):
+            print("[ _save_cdo failed ] cdo is not serializable, please provide to_dict")
             return False
         fullpath = os.path.join(self.cdo_folder, type(cdo).__name__ + self.cdo_suffix)
-        info_dict = cdo.__getstate__()
+        info_dict = cdo.to_dict()
         data = ujson.dumps(info_dict)
         with open(fullpath, 'w') as f:
             f.write(data)
@@ -50,8 +57,8 @@ class UjsonCDOMgr(CDOMgr):
         :param cls:
         :return:
         """
-        if not hasattr(cls, '__setstate__'):
-            print("[ _load_cdo failed ] cdo is not deserializable, please provide __setstate__")
+        if not hasattr(cls, 'from_dict'):
+            print("[ _load_cdo failed ] cdo is not deserializable, please provide from_dict")
             return None
         fullpath = os.path.join(self.cdo_folder, cls.__name__ + self.cdo_suffix)
         if os.path.exists(fullpath):
@@ -59,7 +66,7 @@ class UjsonCDOMgr(CDOMgr):
                 data = f.read()  # 读取整个文件内容
                 info_dict = ujson.loads(data)
                 obj = cls()
-                obj.__setstate__(info_dict)
+                obj.from_dict(info_dict)
                 return obj
         else:
             print("[ _load_cdo failed ] Can't find cdo: " + fullpath)

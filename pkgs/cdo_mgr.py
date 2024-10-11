@@ -7,6 +7,7 @@ from copy import deepcopy, copy
 class CDOMgr(object):
     __metaclass__ = ABCMeta
     __slots__ = ('cdo_pool', 'cdo_folder', 'cdo_suffix')
+    WARM_UP_LIST = []
 
     def __init__(self, folder="./", suffix=".pkl"):
         self.cdo_pool = {}
@@ -36,7 +37,13 @@ class CDOMgr(object):
             print("[ get_cdo failed ] cdo_pool not found: " + cls.__name__)
             return None
 
-    def set_cdo(self, cdo, with_save=True):
+    def refresh_cdo(self, cdo, with_save=True):
+        """
+        刷新cdo
+        :param cdo:
+        :param with_save:
+        :return:
+        """
         self.cdo_pool[type(cdo).__name__] = cdo
         if with_save:
             return self._save_cdo(cdo)
@@ -45,7 +52,7 @@ class CDOMgr(object):
         """
         删除cdo
         :param cls:
-        :param include_file: 是否包括本地cdo文件
+        :param with_file: 是否包括本地cdo文件
         :return:
         """
         if with_file:
@@ -92,6 +99,21 @@ class CDOMgr(object):
             print('No2.create by load_cdo')
         self.cdo_pool[cls.__name__] = cdo
         return self._clone(self.cdo_pool[cls.__name__])
+
+    def warm_up(self):
+        """
+        cdo预热
+        :return:
+        """
+        for item in CDOMgr.WARM_UP_LIST:
+            if isinstance(item, type):
+                print('尝试预热CDO: ' + item.__name__)
+                cdo = self._load_cdo(item)
+                if cdo is None:
+                    print('CDO预热失败: ' + item.__name__)
+                else:
+                    self.cdo_pool[type(cdo).__name__] = cdo
+                    print('CDO预热成功: ' + item.__name__)
 
     def _clone(self, cdo):
         """
