@@ -108,7 +108,7 @@ class CDOMgr(object):
         for item in CDOMgr.WARM_UP_LIST:
             if isinstance(item, type):
                 print('尝试预热CDO: ' + item.__name__)
-                cdo = self._load_cdo(item)
+                cdo = self.create(item)
                 if cdo is None:
                     print('CDO预热失败: ' + item.__name__)
                 else:
