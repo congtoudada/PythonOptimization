@@ -27,13 +27,17 @@ class UJsonCDOMgr(CDOMgr):
         :param cdo:
         :return:
         """
-        info_dict = cdo.to_dict()
-        # data = ujson.dumps(info_dict)
-        # info_dict = ujson.loads(data)
-        obj = copy(cdo)
-        obj.from_dict(info_dict)
+        # 存在自定义深拷贝函数，则使用自定义深拷贝
+        if hasattr(cdo, "__deepcopy__"):
+            # obj = deepcopy(cdo)
+            obj = cdo.__deepcopy__(self)
+            print('深拷贝clone cdo')
+        else:  # 通过序列化/反序列化完成对象拷贝
+            info_dict = cdo.to_dict()
+            obj = copy(cdo)
+            obj.from_dict(info_dict)
+            print('序列化拷贝clone cdo')
         return obj
-
 
     def _save_cdo(self, cdo):
         """

@@ -1,8 +1,10 @@
 # coding=utf-8
 import random
 import time
+from copy import copy
 
 from obj.friend import Friend
+from pkgs.quick_deepcopy import quick_deepcopy
 from pkgs.serialize_decorator import ex_serialize
 from pkgs.warm_up_decorator import ex_warm_up
 
@@ -49,6 +51,15 @@ class Player(object):
         self.bestFriend = Friend()  # ExSerialize()(Friend)
         self.friends = [Friend() for _ in range(n)]
         time.sleep(1)  # 模拟耗时计算
+
+    # def __deepcopy__(self, memo=None):
+    #     # 浅拷贝：所有不可变类型都会拷贝，其他复合或自定义类型如果需要深拷贝需要手动调用
+    #     obj = copy(self)
+    #     obj.data = quick_deepcopy(self.data)
+    #     obj.equipment = quick_deepcopy(self.equipment)
+    #     obj.bag = quick_deepcopy(self.bag)
+    #     obj.skills = quick_deepcopy(self.skills)
+    #     obj.dataMap = quick_deepcopy(self.dataMap)
 
     def from_dict(self, state):
         # -------------------------- python内置类型 --------------------------
