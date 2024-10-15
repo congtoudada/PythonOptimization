@@ -51,7 +51,6 @@ def _copy_dict(d):
             ret[key] = cp(value)
         else:  # 遇到未见类
             ret[key] = deepcopy(value)
-            ret[key] = value
     return ret
 
 
